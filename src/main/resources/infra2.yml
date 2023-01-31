@@ -1,0 +1,20 @@
+version: '3'
+# Test stack
+# This will allow you to bring up a stack to test this service
+# The default configuration works with this stack
+services:
+  zk:
+    image: 'confluentinc/cp-zookeeper:6.0.1'
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+  kafka:
+    image: 'confluentinc/cp-kafka:6.0.1'
+    depends_on:
+      - zk
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zk:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 # my comment: change kafka to localhost
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+    ports:
+      - '9092:9092'
+
