@@ -7,15 +7,12 @@ import io.ktor.server.config.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
 import org.jetbrains.exposed.sql.Database
-import org.koin.core.component.inject
-import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import routes.*
-import services.dao.DAOFacade
-import services.dao.DAOFacadeImpl
-import services.dao.DatabaseFactory
+import services.taskServiceImpl
+import services.initDb
 
 fun appModule(config: ApplicationConfig) = module{
     single<Config> { ConfigFactory.load() }
@@ -26,7 +23,7 @@ fun appModule(config: ApplicationConfig) = module{
         Database.connect(url = dataSource.jdbcUrl, user = dataSource.username, password = dataSource.password)
     }
     single {
-        DAOFacadeImpl()
+        taskServiceImpl()
     }
     single{}
 }
@@ -38,7 +35,7 @@ fun Application.module(){
 //    startKoin{modules(appModule(environment.config))}
 //    DatabaseFactory.init(environment.config)
     val database:Database by inject()
-    DatabaseFactory.init(database)
+    initDb(database)
     configureSerialization()
     configureRouting()
 
@@ -51,9 +48,9 @@ fun Application.configureSerialization() {
     }
 }
 fun Application.configureRouting() {
-    val dao : DAOFacadeImpl by inject()
+    val dao : taskServiceImpl by inject()
     routing {
-        taskRouting(dao)
+        taskRouting()
     }
 }
 

@@ -1,20 +1,18 @@
-package services.dao
+package services
 
+import dto.TaskInfo
+import kotlinx.coroutines.Dispatchers
 import models.Task
-import models.TaskInfo
-import models.Tasks
+import models.repositories.tables.Tasks
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.match
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
-import services.dao.*
-import services.dao.DatabaseFactory.dbQuery
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class DAOFacadeImpl : DAOFacade {
-
+class taskServiceImpl : taskService {
+    suspend fun <T> dbQuery(block: suspend () -> T): T =
+        newSuspendedTransaction(Dispatchers.IO) { block() }
     private fun resultRowToTask(row: ResultRow) = Task(
         row[Tasks.id],
         row[Tasks.name],
@@ -70,9 +68,18 @@ class DAOFacadeImpl : DAOFacade {
         }
 
 
-    override suspend fun updateTask(id: String, taskInfo: TaskInfo): Boolean {
-        TODO("Not yet implemented")
-
+    override suspend fun updateTask(id: String, taskInfo: TaskInfo): Boolean = dbQuery {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+        val currentTime= LocalDateTime.now().format(formatter)
+        Tasks.update({ Tasks.id eq id }) {
+            it[Tasks.name] = taskInfo.name
+            it[Tasks.description] = taskInfo.description
+            it[Tasks.created_by] = taskInfo.created_by
+            it[Tasks.updated_time] = currentTime
+            it[Tasks.assignee] = taskInfo.assignee
+            it[Tasks.status] = taskInfo.status
+            it[Tasks.severity] = taskInfo.severity
+        } > 0
     }
 
     override suspend fun deleteTask(id: String): Boolean {
