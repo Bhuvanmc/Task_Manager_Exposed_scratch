@@ -10,9 +10,9 @@ import org.jetbrains.exposed.sql.Table
 
 //@Serializable
 
-object Tasks:Table(){
+object Tasks:Table("tm_tasks.tasks"){
     val id = varchar("id", 128)
-    val name = varchar("uname", 128)
+    val name = varchar("name", 128)
     val description = varchar("description", 1024)
     val created_by = varchar("created_by", 128)
     val created_time = varchar("created_time", 128)

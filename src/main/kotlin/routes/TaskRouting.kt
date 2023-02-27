@@ -6,14 +6,13 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.util.*
 import org.koin.ktor.ext.inject
-import services.taskServiceImpl
+import services.TaskServiceImpl
 
 //import services.dao.dao
 
 fun Route.taskRouting(){
-    val dao : taskServiceImpl by inject()
+    val dao : TaskServiceImpl by inject()
     route("/"){
         get{
             call.respondText("Welcome to Task Manager")
@@ -26,7 +25,12 @@ fun Route.taskRouting(){
         }
         get ("/{id}"){
             val id = call.parameters["id"]?: return@get call.respondText("Missing ID",status= HttpStatusCode.BadRequest)
-            call.respond(dao.task(id))
+//            val task = dao.task(id)?: return@get call.respondText("No task Exists with the id $id", status = HttpStatusCode.NotFound)
+            val task = dao.task(id)
+            if (task == null)
+                call.respondText("No task Exists with the id $id", status = HttpStatusCode.NotFound)
+            else
+                call.respond(task)
         }
         post {
             val taskInfo = call.receive<TaskInfo>()
@@ -42,7 +46,7 @@ fun Route.taskRouting(){
             call.respondRedirect("/tasks")
             }
 
-        delete ("{id?}"){
+        delete ("/{id}"){
             val id = call.parameters["id"]?: return@delete call.respondText("Missing ID",status= HttpStatusCode.BadRequest)
             if(dao.deleteTask(id))
                 call.respondText("Task $id deleted successfully", status = HttpStatusCode.Accepted)
